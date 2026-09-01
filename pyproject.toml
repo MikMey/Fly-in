@@ -5,8 +5,11 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "colour>=0.1.5",
     "flake8>=7.3.0",
     "mypy>=2.1.0",
     "numpy>=2.4.6",
     "pydantic>=2.13.4",
+    "pylance>=11.0.0",
+    "regex>=2026.9.3",
 ]
