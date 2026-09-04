@@ -20,8 +20,10 @@ class Connection(BaseModel):
 	group: str = "connection"
 	start: str = Field(..., min_length=1)
 	end: str = Field(..., min_length=1)
+	link: frozenset[str] = frozenset()
 	max_link_capacity: int = Field(default=1, ge=0, le=99999)
-	max_cost: int = -1
+	used: int = 0
+	hubs: list["Hub | BaseModel"] = []
 
 	@model_validator(mode="before")
 	def prep(self: dict[str, str | Any]):
@@ -39,6 +41,7 @@ class Connection(BaseModel):
 	def validate(self):
 		if self.start == self.end:
 			sys.exit(f"Connection \"{self.start}-{self.end}\" ends in itself")
+		self.link = frozenset([self.start, self.end])
 		return self
 
 class Hub(BaseModel):
@@ -52,6 +55,7 @@ class Hub(BaseModel):
 	max_drones: int = Field(default=1, ge=0, le=99999)
 	max_cost: int = -1
 	connections: list[Connection] = []
+	drones: dict = {}
 
 	@model_validator(mode="before")
 	def prep(self: dict[str, str | Any]):
