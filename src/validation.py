@@ -37,9 +37,8 @@ def _create_obj(class_type: BaseModel, objects: Data, matched: re.Match)\
 		if any(checked.name == i.name for i in objects[type(checked)] if type(i) == Hub):
 			sys.exit("Duplicate name")
 	elif type(checked) == Connection:
-		if any(checked.start == i.start for i in objects[type(checked)] if type(i) == Connection)\
-			and any(checked.end == i.end for i in objects[type(checked)] if type(i) == Connection):
-			sys.exit("Duplicate route")
+		if any(checked.link == i.link for i in objects[type(checked)] if type(i) == Connection):
+			sys.exit(f"Duplicate route with \"{checked.start}-{checked.end}\"")
 	objects[type(checked)].append(checked)
 	return(objects)
 
@@ -49,26 +48,31 @@ def cache_input(filepath: str) -> Data:
 		Hub: [],
 		Connection: []
 	}
-	with open(file=filepath, mode='r') as file:
-		for i, line  in enumerate(file):
-			if "#" in line or ":" not in line:
-				continue
-			if not any(elem in line for elem in GROUPS):
-				sys.exit(f"Provided file contains bad information in line {i + 1}:\n\"{line}\"")
-			line = line.strip().lower()
-			for pattern in PATTERNS:
-				matched = re.match(pattern, line)
-				if matched:
-					break
-			if not matched:
-				sys.exit(f"Provided file contains bad information in line {i + 1}:\n\"{line}\"")
-			try:
-				group = matched.groupdict()['group']
-				objects = _create_obj(MATCHES[group], objects, matched)
-			except ValidationError as err:
-				sys.exit(f"Error in validation:\n{err}")
-			except Exception as err:
-				sys.exit(f"Error:\n{err}")
+	try:
+		with open(file=filepath, mode='r') as file:
+			for i, line  in enumerate(file):
+				if "#" in line or ":" not in line:
+					continue
+				if not any(elem in line for elem in GROUPS):
+					sys.exit(f"Provided file contains bad information in line {i + 1}:\n\"{line}\"")
+				line = line.strip().lower()
+				for pattern in PATTERNS:
+					matched = re.match(pattern, line)
+					if matched:
+						break
+				if not matched:
+					sys.exit(f"Provided file contains bad information in line {i + 1}:\n\"{line}\"")
+				try:
+					group = matched.groupdict()['group']
+					objects = _create_obj(MATCHES[group], objects, matched)
+				except ValidationError as err:
+					sys.exit(f"Error in validation:\n{err}")
+				except Exception as err:
+					sys.exit(f"Error:\n{err}")
+	except FileNotFoundError as err:
+		sys.exit(f"File \"{filepath}\" doesnt exist:\n{err}")
+	except Exception as err:
+		sys.exit(f"Something went wrong:\n{err}")
 	objects = verify(objects)
 	
 	return(objects)
@@ -97,12 +101,14 @@ def _clear_hubs(objects: Data) -> Data:
 			i = 0
 	return objects
 
-def _attach_connections(objects: Data) -> Data:
+def _attach_objects(objects: Data) -> Data:
 	for hub in objects[Hub]:
 		for con in objects[Connection]:
 			if hub.name == con.start or hub.name == con.end:
 				hub.connections.append(con)
+				con.hubs.append(hub)
 	return objects
+
 
 def verify(objects: Data) -> Data:
 	if not any('start_hub' == hub.group for hub in objects[Hub]) or\
@@ -115,6 +121,6 @@ def verify(objects: Data) -> Data:
 		else:
 			sys.exit(f"Connection \"{con.start}-{con.end}\"contains invalid nodes")
 	objects = _clear_hubs(objects)
-	objects = _attach_connections(objects)
+	objects = _attach_objects(objects)
 
 	return objects
