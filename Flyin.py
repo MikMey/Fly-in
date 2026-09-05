@@ -4,7 +4,7 @@ from typing import Optional
 from src import cache_input, cost_calc, Data, Hub, Drone, Connection, send_drones
 
 
-def main(argv: Optional[list[str]] = None):
+def main(argv: Optional[list[str]] = None) -> None:
 
 	args = sys.argv[1:] if argv is None else argv
 	if len(args) > 1 or len(args) == 0:

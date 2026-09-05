@@ -6,7 +6,7 @@ from colour import Color
 
 from .models import Data, Hub, Connection, Drone
 
-def _find_connection(hub: Hub, moving: int) -> Hub:
+def _find_connection(hub: Hub, moving: int) -> Hub | None:
 	targets: list[Hub] = []
 	for connection in hub.connections:
 		if connection.used >= connection.max_link_capacity:
@@ -80,8 +80,8 @@ def send_drones(objects: Data) -> int:
 				if counter > 0:
 					hub.drones[drone] = 0
 					continue
-				target: Hub = _find_connection(hub, moving)
-				if target == None:
+				target = _find_connection(hub, moving)
+				if target is None:
 					continue
 				hub.drones.__delitem__(drone)
 				target.drones[drone] = 0

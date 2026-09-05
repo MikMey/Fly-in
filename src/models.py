@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Self
 import sys
 
 from pydantic import BaseModel, Field, model_validator
@@ -23,10 +23,10 @@ class Connection(BaseModel):
 	link: frozenset[str] = frozenset()
 	max_link_capacity: int = Field(default=1, ge=0, le=99999)
 	used: int = 0
-	hubs: list["Hub | BaseModel"] = []
+	hubs: list["Hub"] = []
 
 	@model_validator(mode="before")
-	def prep(self: dict[str, str | Any]):
+	def prep(self: dict[str, str | Any]) -> Any:
 		if self['metadata']:
 			self['metadata'] = self['metadata'].split(' ')
 			for i in self['metadata']:
@@ -38,7 +38,7 @@ class Connection(BaseModel):
 		return self
 
 	@model_validator(mode='after')
-	def validate(self):
+	def validates(self) -> Any:
 		if self.start == self.end:
 			sys.exit(f"Connection \"{self.start}-{self.end}\" ends in itself")
 		self.link = frozenset([self.start, self.end])
@@ -58,7 +58,7 @@ class Hub(BaseModel):
 	drones: dict = {}
 
 	@model_validator(mode="before")
-	def prep(self: dict[str, str | Any]):
+	def prep(self: dict[str, str | Any]) -> Any:
 		if self['metadata']:
 			self['metadata'] = self['metadata'].split(' ')
 			for i in self['metadata']:
@@ -75,10 +75,10 @@ class Hub(BaseModel):
 		return self
 
 	@model_validator(mode='after')
-	def validate(self):
+	def validates(self) -> Any:
 		if self.zone not in ZONES:
 			sys.exit(f"Invalid hub zone \"{self.zone}\" at \"{self.name}\"")
 		return self
 
 
-Data = dict[Drone|Hub|Connection, list[Drone|Hub|Connection]]
+Data = dict[type[Drone] | type[Hub] | type[Connection], list[Any]]

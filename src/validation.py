@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, cast
 import sys
 
 import re
@@ -22,7 +22,7 @@ connection_pattern = re.compile(
 
 GROUPS: list = ["nb_drones", "start_hub", "end_hub", "hub", "connection"]
 PATTERNS: list = [drones_pattern, hub_pattern, connection_pattern]
-MATCHES: dict[str, BaseModel] = {
+MATCHES: dict[str, type[Drone] | type[Hub] | type[Connection]] = {
 	'nb_drones': Drone,
 	'start_hub': Hub,
 	'end_hub': Hub,
@@ -30,9 +30,9 @@ MATCHES: dict[str, BaseModel] = {
 	'connection': Connection
 }
 
-def _create_obj(class_type: BaseModel, objects: Data, matched: re.Match)\
+def _create_obj(class_type: type[BaseModel], objects: Data, matched: re.Match)\
 	-> Data:
-	checked: Drone|Hub|Connection = class_type.model_validate(matched.groupdict())
+	checked = cast(Drone | Hub | Connection, class_type.model_validate(matched.groupdict()))
 	if type(checked) == Hub:
 		if any(checked.name == i.name for i in objects[type(checked)] if type(i) == Hub):
 			sys.exit("Duplicate name")
