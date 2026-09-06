@@ -62,7 +62,7 @@ def send_drones(objects: Data) -> int:
 	while number of drones > drones at end hub
 	"""
 	while objects[Drone][0].number > len(objects[Hub][0].drones):
-		sleep(0.1)
+		# sleep(0.1)
 		busy: list[str] = []
 		for con in objects[Connection]:
 			con.used = 0
@@ -93,6 +93,8 @@ def send_drones(objects: Data) -> int:
 				if target.group == 'end_hub':
 					moving -= 1
 		print(f"", end="\n")
+	if turn_counter == 0:
+		sys.exit("Graph doesnt connect start and end")
 
 	return turn_counter
 
